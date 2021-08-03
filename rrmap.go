@@ -6,10 +6,12 @@ import (
 
 type rrMap map[rrKey]*rrVal
 
+// create key:value map for RRs
 func newRRMap(size int) rrMap {
 	return make(rrMap, size)
 }
 
+// reset map
 func (m *rrMap) reset() {
 	if m == nil {
 		return
@@ -19,6 +21,7 @@ func (m *rrMap) reset() {
 	}
 }
 
+// put entry to map
 func (m *rrMap) put(k rrKey, v *rrVal) {
 	if m == nil {
 		return
@@ -26,6 +29,15 @@ func (m *rrMap) put(k rrKey, v *rrVal) {
 	(*m)[k] = v
 }
 
+// put RR to map
+func (m *rrMap) putRR(k rrKey, rr dns.RR) {
+	if rr == nil {
+		return
+	}
+	m.put(k, newRRVal(rr))
+}
+
+// get entry from map
 func (m *rrMap) get(k rrKey) *rrVal {
 	if m == nil {
 		return nil
@@ -33,15 +45,14 @@ func (m *rrMap) get(k rrKey) *rrVal {
 	return (*m)[k]
 }
 
-func (m *rrMap) getRR(k rrKey) []dns.RR {
-	if m == nil {
-		return nil
-	}
+// get RR slice from
+func (m *rrMap) getRRs(k rrKey) []dns.RR {
 	return m.get(k).getRR()
 }
 
+// copy data from one map to other
 func (m *rrMap) copyFrom(src rrMap) {
-	if m == nil {
+	if m == nil || len(src) == 0 {
 		return
 	}
 	for k, v := range src {
@@ -49,6 +60,7 @@ func (m *rrMap) copyFrom(src rrMap) {
 	}
 }
 
+// walk all values in map, if f returns true - entry deleted
 func (m *rrMap) forEachDel(f func(v *rrVal) bool) {
 	if m == nil {
 		return
@@ -60,6 +72,7 @@ func (m *rrMap) forEachDel(f func(v *rrVal) bool) {
 	}
 }
 
+// walk all values in map with given func
 func (m *rrMap) forEachVal(f func(v *rrVal)) {
 	if m == nil {
 		return

@@ -10,6 +10,7 @@ type rrKey struct {
 	qclass uint16
 }
 
+// make key from Question
 func keyFromQ(q *dns.Question) rrKey {
 	return rrKey{
 		qname:  fixName(q.Name),
@@ -18,6 +19,7 @@ func keyFromQ(q *dns.Question) rrKey {
 	}
 }
 
+// make key from RR
 func keyFromRR(rr dns.RR) rrKey {
 	h := rr.Header()
 	return rrKey{
@@ -27,16 +29,16 @@ func keyFromRR(rr dns.RR) rrKey {
 	}
 }
 
-func (k rrKey) match(rrs []dns.RR) bool {
-	l := len(rrs)
-	if l == 0 {
-		return false
+// is key match with last RR from slice
+func (k *rrKey) match(rrs []dns.RR) bool {
+	if rr := lastRR(rrs); rr != nil {
+		return rr.Header().Rrtype == k.qtype && rr.Header().Class == k.qclass
 	}
-	h := rrs[l-1].Header() // last RR header
-	return h.Rrtype == k.qtype && h.Class == k.qclass
+	return false
 }
 
-func (k rrKey) cnkey() rrKey { // make cname key from key
+// make CNAME key from key
+func (k *rrKey) cnameKey() rrKey { // make cname key from key
 	return rrKey{
 		qname:  k.qname,
 		qtype:  dns.TypeCNAME,
@@ -44,6 +46,7 @@ func (k rrKey) cnkey() rrKey { // make cname key from key
 	}
 }
 
+// update key name from given CNAME RR
 func (k *rrKey) update(rr dns.RR) bool {
 	if k == nil || !isCNAME(rr) {
 		return false
@@ -53,13 +56,14 @@ func (k *rrKey) update(rr dns.RR) bool {
 	return true
 }
 
-func (k *rrKey) soaKey() *rrKey {
+// generate SOA key (for negative cache)
+func (k *rrKey) soaKey() (rrKey, bool) {
 	if k == nil || k.qtype == dns.TypeSOA {
-		return nil
+		return rrKey{}, false
 	}
-	return &rrKey{
+	return rrKey{
 		qname:  k.qname,
 		qtype:  dns.TypeSOA,
 		qclass: k.qclass,
-	}
+	}, true
 }

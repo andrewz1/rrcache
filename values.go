@@ -11,6 +11,7 @@ type rrVal struct {
 	exp int64
 }
 
+// make new val from RR
 func newRRVal(src dns.RR) *rrVal {
 	rr := dns.Copy(src)
 	h := rr.Header()
@@ -22,7 +23,8 @@ func newRRVal(src dns.RR) *rrVal {
 	}
 }
 
-func (v *rrVal) add(src dns.RR) {
+// append RR to given val
+func (v *rrVal) addRR(src dns.RR) {
 	if v == nil {
 		return
 	}
@@ -31,6 +33,7 @@ func (v *rrVal) add(src dns.RR) {
 	v.rrs = append(v.rrs, rr)
 }
 
+// calc ttl of given val
 func (v *rrVal) getTTL() uint32 {
 	if v == nil {
 		return 0
@@ -41,6 +44,7 @@ func (v *rrVal) getTTL() uint32 {
 	return 0
 }
 
+// get RRs from given val
 func (v *rrVal) getRR() []dns.RR {
 	if v == nil || len(v.rrs) == 0 {
 		return nil
